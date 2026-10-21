@@ -4,6 +4,9 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Weight Loss Diet Plan Calculator</title>
+<!-- PWA Manifest Link -->
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#14543d">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:wght@500;700;800&family=Source+Sans+3:wght@400;600;700&display=swap" rel="stylesheet">
@@ -522,7 +525,7 @@ $(function () {
       html += '<div class="notice">Is setting par calories minimum limit (' + sim.floorKcal + ') tak pohanch jati hain aur weight mazeed nahi girta. Neeche ka time sirf wahan tak ka hai. Activity barhayen ya target thora badal dein.</div>';
     }
 
-    html += '<div class="hero"><div class="small">' + p.cur + ' kg se ' + p.tgt + ' kg tak, taqriban</div>' +
+    html += '<div class="hero"><div class="small">' + p.cur + ' kg سے ' + p.tgt + ' kg tak, taqriban</div>' +
             '<div class="big"><span>' + (months < 1.5 ? Math.round(sim.weeks) : months) + '</span> ' + (months < 1.5 ? 'hafte' : 'mahine') + '</div>' +
             '<div class="date">Start: ' + p.start.toLocaleDateString("en-GB", {day: "numeric", month: "short", year: "numeric"}) + '. Target taareekh: ' + dateStr + ' (agar plan par 80 se 90% chalein)</div></div>';
 
@@ -631,6 +634,17 @@ $(function () {
 
   generate();
 });
+</script>
+
+<!-- Register Service Worker for PWA -->
+<script>
+  if ('serviceWorker' in navigator) {
+    window.addEventListener('load', () => {
+      navigator.serviceWorker.register('./sw.js')
+        .then(reg => console.log('Service Worker registered!', reg))
+        .catch(err => console.log('Service Worker registration failed: ', err));
+    });
+  }
 </script>
 </body>
 </html>
