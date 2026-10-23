@@ -1,0 +1,20 @@
+{
+  "id": "./",
+  "name": "Weight Loss Diet Plan Calculator",
+  "short_name": "Diet Plan",
+  "description": "Calories, protein, timeline aur Pakistani meal plan: weight loss diet plan calculator.",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "portrait",
+  "lang": "en",
+  "dir": "ltr",
+  "theme_color": "#14543d",
+  "background_color": "#f2f5f1",
+  "categories": ["health", "fitness", "lifestyle"],
+  "icons": [
+    { "src": "icons/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "icons/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "icons/icon-maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ]
+}
