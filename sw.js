@@ -1,8 +1,4 @@
-/* Diet Plan Calculator service worker
-   - Precache: app shell, jQuery, fonts, icons (sab kuch offline chalta hai)
-   - Runtime: stale-while-revalidate (cache se foran, background mein update)
-   - Naya deploy karte waqt VERSION badal dein taake precache dobara ban jaye */
-const VERSION = "v1";
+const VERSION = "v14";
 const CACHE = "dietplan-" + VERSION;
 
 const PRECACHE = [
@@ -43,9 +39,8 @@ self.addEventListener("fetch", (event) => {
   const req = event.request;
   if (req.method !== "GET") return;
   const url = new URL(req.url);
-  if (url.origin !== self.location.origin) return; // bahar ki cheezein browser par chhor dein
+  if (url.origin !== self.location.origin) return;
 
-  // Page navigation: cache wala index.html, warna network, warna offline fallback
   if (req.mode === "navigate") {
     event.respondWith(
       caches.match("index.html").then((cached) => {
@@ -59,7 +54,6 @@ self.addEventListener("fetch", (event) => {
     return;
   }
 
-  // Baaqi same-origin files: stale-while-revalidate
   event.respondWith(
     caches.match(req).then((cached) => {
       const net = fetch(req).then((res) => {

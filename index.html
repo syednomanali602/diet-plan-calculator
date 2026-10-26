@@ -170,7 +170,6 @@ ul.rules li{margin-bottom:7px}
 .month.open .arrow{transform:rotate(90deg)}
 .mbody{display:none;padding:4px 6px 10px}
 .month.open .mbody{display:block}
-tr.rest td{background:var(--turmeric-soft)}
 tr.deload td{background:var(--green-soft)}
 tr.finish td{font-weight:700}
 .mbody td,.mbody th{padding:8px 10px;font-size:.93rem}
@@ -187,7 +186,7 @@ tr.finish td{font-weight:700}
 <div class="wrap">
   <header class="top">
     <h1>Weight Loss Diet Plan Calculator</h1>
-    <p>Apna weight, height aur target weight likhein. Calories, protein, kitne mahine lagenge aur Pakistani meal plan neeche ban jayega.</p>
+    <p>Apna weight, height aur target weight likhein. Calories, protein, kitne months lagenge aur Pakistani meal plan neeche ban jayega.</p>
   </header>
 
   <div class="layout">
@@ -204,7 +203,7 @@ tr.finish td{font-weight:700}
           </select>
         </div>
         <div class="field">
-          <label for="age">Age (saal)</label>
+          <label for="age">Age</label>
           <input type="number" id="age" value="33" min="16" max="90" inputmode="numeric">
         </div>
       </div>
@@ -232,19 +231,28 @@ tr.finish td{font-weight:700}
       <div class="field">
         <label for="act">Daily activity</label>
         <select id="act">
-          <option value="1.2">Kam (desk job, cycle nahi)</option>
-          <option value="1.375" selected>Halki (desk job + roz cycle/walk)</option>
-          <option value="1.55">Moderate (hafte mein 5 din exercise)</option>
+          <option value="1">1 cycle session</option>
+          <option value="2" selected>2 cycle sessions</option>
+        </select>
+        <div class="hint">Har session 30 minute se shuru hota hai aur har 2 weeks mein 5 minute barhta hai.</div>
+      </div>
+
+      <div class="field" id="sessWrap">
+        <label for="sessTime">Session?</label>
+        <select id="sessTime">
+          <option value="morning" selected>Morning session</option>
+          <option value="night">Night session</option>
         </select>
       </div>
 
       <div class="field">
         <label for="pace">Weight loss ki raftaar</label>
         <select id="pace">
-          <option value="400">Slow (aasan, kam bhook)</option>
+          <option value="400">Slow</option>
           <option value="600" selected>Normal (recommended)</option>
-          <option value="800">Fast (sakht diet)</option>
+          <option value="800">Fast</option>
         </select>
+        <div class="hint">Slow: Mon, Wed, Fri. Normal: Mon se Fri. Fast: Mon se Sun.</div>
       </div>
 
       <div class="field">
@@ -267,45 +275,56 @@ tr.finish td{font-weight:700}
 <script>
 $(function () {
 
-  /* ---------- Meal templates (portions scale with calories) ---------- */
   var MEALS = {
-    low: [
-      {t:"11:15 am", n:"Nashta", i:"2 boiled anday (raat ko boil kar ke fridge mein rakhe hue) + 1 cup dahi ya doodh (bina cheeni). Gas ki zaroorat nahi."},
-      {t:"4:00 pm",  n:"Lunch (din ka sab se bara meal)", i:"1.5 katori chicken salan ya daal ya chana (kam oil) + 1 roti + sabzi + bara salad + 4 chamach dahi."},
-      {t:"10:00 pm", n:"Cycle", i:"30 se 45 minute, resistance halka se medium.", cycle:true},
-      {t:"10:30 pm", n:"Dinner (halka)", i:"Grilled ya halka salan chicken/machli (1 chhoti plate) + sabzi + salad. Roti nahi ya aadhi. Chawal nahi."}
-    ],
-    mid: [
-      {t:"11:15 am", n:"Nashta", i:"2 boiled anday (raat ko boil kar ke fridge mein rakhe hue) + 1 cup doodh ya dahi (bina cheeni) + 1 kela ya seb."},
-      {t:"4:00 pm",  n:"Lunch (din ka sab se bara meal)", i:"2 katori chicken salan ya daal ya chana (kam oil) + 1.5 roti ya aadhi plate chawal + sabzi + bara salad + 4 chamach dahi + 1 fruit."},
-      {t:"10:00 pm", n:"Cycle", i:"30 se 45 minute, resistance halka se medium.", cycle:true},
-      {t:"10:30 pm", n:"Dinner (halka)", i:"Grilled ya halka salan chicken/machli (1 plate) + sabzi + salad + 1 roti ya bilkul nahi. Chawal nahi."}
-    ],
-    high: [
-      {t:"11:15 am", n:"Nashta", i:"3 boiled anday (raat ko boil kar ke fridge mein rakhe hue) + 1 cup doodh (bina cheeni) + 1 bread slice ya 1 kela."},
-      {t:"4:00 pm",  n:"Lunch (din ka sab se bara meal)", i:"2 katori chicken salan ya daal + 2 roti ya 1 plate chawal + sabzi + bara salad + 4 chamach dahi + 1 fruit."},
-      {t:"10:00 pm", n:"Cycle", i:"30 se 45 minute, resistance medium.", cycle:true},
-      {t:"10:30 pm", n:"Dinner (halka)", i:"Chicken/machli (1 bari plate, grilled ya halka salan) + sabzi + salad + 1 se 2 roti. Chawal kam."}
-    ]
+    low: {
+      res: "halka se medium",
+      nashta: "2 boiled anday (raat ko boil kar ke fridge mein rakhe hue) + 1 cup dahi ya doodh (bina cheeni). Gas ki zaroorat nahi.",
+      lunch: "1.5 katori chicken salan ya daal ya chana (kam oil) + 1 roti + sabzi + bara salad + 4 chamach dahi.",
+      dinner: "Grilled ya halka salan chicken/machli (1 chhoti plate) + sabzi + salad. Roti nahi ya aadhi. Chawal nahi."
+    },
+    mid: {
+      res: "halka se medium",
+      nashta: "2 boiled anday (raat ko boil kar ke fridge mein rakhe hue) + 1 cup doodh ya dahi (bina cheeni) + 1 kela ya seb.",
+      lunch: "2 katori chicken salan ya daal ya chana (kam oil) + 1.5 roti ya aadhi plate chawal + sabzi + bara salad + 4 chamach dahi + 1 fruit.",
+      dinner: "Grilled ya halka salan chicken/machli (1 plate) + sabzi + salad + 1 roti ya bilkul nahi. Chawal nahi."
+    },
+    high: {
+      res: "medium",
+      nashta: "3 boiled anday (raat ko boil kar ke fridge mein rakhe hue) + 1 cup doodh (bina cheeni) + 1 bread slice ya 1 kela.",
+      lunch: "2 katori chicken salan ya daal + 2 roti ya 1 plate chawal + sabzi + bara salad + 4 chamach dahi + 1 fruit.",
+      dinner: "Chicken/machli (1 bari plate, grilled ya halka salan) + sabzi + salad + 1 se 2 roti. Chawal kam."
+    }
   };
+
+  var CYC = {start: 30, step: 5, every: 2, max: 75, met: 7, base: 1.2, wake: 645, gap: 5, nightStart: 1305, dinnerGap: 15};
+  var DAYS = {"400": [1, 3, 5], "600": [1, 2, 3, 4, 5], "800": [0, 1, 2, 3, 4, 5, 6]};
+  function daysShort(p) {
+    if (p.days.length === 3) return "Cycle Mon, Wed, Fri, baaqi din aaram. ";
+    if (p.days.length === 7) return "Cycle Mon se Sun, koi aaram ka din nahi. ";
+    return "Cycle Mon se Fri, sanichar aur itwar ko aaram. ";
+  }
+  function daysLong(p) {
+    if (p.days.length === 3) return "Cycle Mon, Wed, Fri (weeks mein 3 din), baaqi din aaram aur table mein nahi dikhaye gaye.";
+    if (p.days.length === 7) return "Cycle Mon se Sun (weeks mein 7 din), koi aaram ka din nahi.";
+    return "Cycle Mon se Fri (weeks mein 5 din), sanichar aur itwar ko aaram aur table mein nahi dikhaye gaye.";
+  }
 
   var RULES = [
     "Cold drinks, meethi chai, juice aur bakery items band. Ye sab se zyada farq daalte hain.",
     "Paani roz 2.5 se 3 litre. Office mein bottle saath rakhein.",
     "Nashta skip na karein, warna 4 baje zyada khayenge.",
-    "Sirf 3 meals hain (nashta, lunch, dinner). Protein ka andaza: nashta ~20 g, lunch ~40 g, dinner ~40 g, baaqi dahi/doodh se.",
+    "Sirf 3 meals hain (nashta, lunch, dinner). Cycle se pehle sirf paani ya 2 khajoor. Protein ka andaza: nashta ~20 g, lunch ~40 g, dinner ~40 g, baaqi dahi/doodh se.",
     "Sone se pehle banana shake ya koi bhi meethi cheez band. Chahein to sirf paani, green tea ya 1 glass sada doodh.",
     "Dinner halka rakhein aur sone se kam az kam 2 se 3 ghante pehle karein. Dinner ke baad kuch aur nahi.",
-    "Fast food, rolls aur burgers hafte mein 1 baar se zyada nahi.",
-    "Hafte mein 1 din apni pasand ka khana thori miqdar mein khayen taake plan chhoot na jaye.",
-    "Roz 6,000 se 8,000 qadam aur hafte mein 2 din halki strength training.",
-    "Weight hafte mein ek baar, subah ek hi time par check karein. 2 se 4 hafte ka trend dekhein, roz ka nahi.",
+    "Fast food, rolls aur burgers weeks mein 1 baar se zyada nahi.",
+    "Weeks mein 1 din apni pasand ka khana thori miqdar mein khayen taake plan chhoot na jaye.",
+    "Roz 6,000 se 8,000 qadam aur weeks mein 2 din halki strength training.",
+    "Weight weeks mein ek baar, subah ek hi time par check karein. 2 se 4 weeks ka trend dekhein, roz ka nahi.",
     "Shuru karne se pehle ek baar checkup (sugar, cholesterol, BP) zaroor karwa lein."
   ];
 
   var state = null;
 
-  /* ---------- Calculation helpers ---------- */
   function bmrCalc(w, h, age, sex) {
     return 10 * w + 6.25 * h - 5 * age + (sex === "male" ? 5 : -161);
   }
@@ -315,9 +334,27 @@ $(function () {
 
   function monthsText(weeks) {
     var m = weeks / 4.345;
-    if (m < 1.5) return Math.max(1, Math.round(weeks)) + " hafte";
-    return (Math.round(m * 10) / 10) + " mahine";
+    if (m < 1.5) return Math.max(1, Math.round(weeks)) + " weeks";
+    return (Math.round(m * 10) / 10) + " months";
   }
+
+  function baseMins(wi) { return Math.min(CYC.max, CYC.start + CYC.step * Math.floor(wi / CYC.every)); }
+  function isDeload(wi, totalWeeks) { return ((wi + 1) % 4 === 0) && wi >= 3 && (totalWeeks === undefined || wi < totalWeeks - 2); }
+  function weekMins(wi, totalWeeks) {
+    var b = baseMins(wi);
+    return isDeload(wi, totalWeeks) ? Math.max(10, Math.round(b * 0.7 / 5) * 5) : b;
+  }
+  function sessionKcal(w, mins) { return (CYC.met - 1) * w * mins / 60; }
+  function cycleKcalPerDay(p, w, wi, ignoreDeload) {
+    var mins = ignoreDeload ? baseMins(wi) : weekMins(wi);
+    return sessionKcal(w, mins) * p.sessions * p.days.length / 7;
+  }
+  function round10(x) { return Math.round(x / 10) * 10; }
+  function wakeFor(mins) { return CYC.wake - (mins - CYC.start); }
+  function fmtClock(t) { var h = Math.floor(t / 60), m = t % 60; return ((h + 11) % 12 + 1) + ":" + (m < 10 ? "0" : "") + m + (h >= 12 ? " pm" : " am"); }
+  function hasMorning(p) { return p.sessions === 2 || p.sessTime === "morning"; }
+  function hasNight(p) { return p.sessions === 2 || p.sessTime === "night"; }
+  function dinnerFor(mins) { return CYC.nightStart + mins + CYC.dinnerGap; }
 
   function simulate(p) {
     var floorKcal = p.sex === "male" ? 1500 : 1200;
@@ -334,17 +371,19 @@ $(function () {
 
     while (bi < bands.length && week < 700) {
       var b = bands[bi];
-      var tdee = bmrCalc(w, p.h, p.age, p.sex) * p.act;
+      var tdee = bmrCalc(w, p.h, p.age, p.sex) * CYC.base + cycleKcalPerDay(p, w, week);
       if (bandStart) {
-        var d = Math.min(p.deficit, tdee * 0.25);
-        intake = Math.max(floorKcal, round50(tdee - d));
-        b.kcal = intake; b.tdee = Math.round(tdee);
+        var tdeeRef = bmrCalc(w, p.h, p.age, p.sex) * CYC.base + cycleKcalPerDay(p, w, 0, true);
+        var d = Math.min(p.deficit, tdeeRef * 0.25);
+        intake = Math.max(floorKcal, round50(tdeeRef - d));
+        b.kcal = intake; b.tdee = Math.round(tdeeRef);
         b.floored = (intake === floorKcal);
         b.from = w;
         bandStart = false;
       }
       var loss = (tdee - intake) * 7 / 7700 * 0.9;
       if (loss < 0.02) { stuck = true; break; }
+      loss = Math.min(loss, w * 0.01);
       w -= loss; week++; b.weeks++;
       points.push({wk: week, w: Math.max(w, p.tgt), bi: bi});
       if (w <= b.to + 0.001) { bi++; bandStart = true; }
@@ -366,20 +405,11 @@ $(function () {
     return {protein: protein, fat: fat, carbs: Math.max(carbs, 0)};
   }
 
-  /* ---------- Daily schedule ---------- */
-  function cycleCfg(deficit) {
-    if (deficit <= 400) return {start: 15, step: 5, every: 3, max: 30};
-    if (deficit >= 800) return {start: 30, step: 5, every: 2, max: 60};
-    return {start: 20, step: 5, every: 2, max: 45};
-  }
-
-  function fmtDate(d) { return d.toLocaleDateString("en-GB", {weekday: "short", day: "numeric", month: "short"}); }
+  function fmtDate(d) { return d.toLocaleDateString("en-GB", {day: "numeric", month: "short"}); }
   function oneDec(x) { return (Math.round(x * 10) / 10).toFixed(1); }
 
-  function baseMins(cfg, wi) { return Math.min(cfg.max, cfg.start + cfg.step * Math.floor(wi / cfg.every)); }
-
   function buildDays(p, sim) {
-    var cfg = cycleCfg(p.deficit), pts = sim.points, total = sim.weeks * 7, days = [];
+    var pts = sim.points, total = sim.weeks * 7, days = [];
     var start = new Date(p.start); start.setHours(0, 0, 0, 0);
 
     for (var d = 1; d <= total; d++) {
@@ -389,27 +419,17 @@ $(function () {
       var w = pts[i].w + (pts[i + 1].w - pts[i].w) * fr;
       var band = sim.bands[pts[wi + 1].bi];
       var date = new Date(start); date.setDate(start.getDate() + d - 1);
-      var sunday = date.getDay() === 0;
-      var deload = ((wi + 1) % 4 === 0) && wi >= 3 && wi < sim.weeks - 2;
-      var base = baseMins(cfg, wi);
-      var mins = deload ? Math.max(10, Math.round(base * 0.7 / 5) * 5) : base;
-      var level = Math.min(6, 1 + Math.floor(wi / 6));
-      if (deload) level = Math.max(1, level - 1);
-      var newPhase = wi > 0 && pts[wi + 1].bi !== pts[wi].bi && (d - 1) % 7 === 0;
-      var firstDayOfWeek = (d - 1) % 7 === 0;
-      var up = wi > 0 && firstDayOfWeek && !deload && base > baseMins(cfg, wi - 1);
-      var notes = [];
-      if (d === 1) notes.push("Shuruaat");
-      if (sunday) { notes.push("Aaram + weight check"); mins = 0; }
-      if (deload && !sunday && firstDayOfWeek) notes.push("Recovery week (time kam)");
-      if (up) notes.push("Time +" + cfg.step + " min");
-      if (newPhase) notes.push("Naya phase: " + band.kcal + " kcal");
-      if (d === total) notes.push("Target weight!");
+      var dow = date.getDay(), rest = p.days.indexOf(dow) < 0;
+      var deload = isDeload(wi, sim.weeks);
+      var mins = weekMins(wi, sim.weeks);
+      if (rest) mins = 0;
+      var dayW = d === total ? p.tgt : w;
       days.push({
-        d: d, date: date, w: d === total ? p.tgt : w, kcal: band.kcal,
+        d: d, date: date, w: dayW, kcal: band.kcal,
+        burn: mins ? sessionKcal(dayW, mins) * p.sessions : 0,
         protein: macrosFor(band.kcal, p.tgt).protein,
-        mins: mins, level: level, sunday: sunday, deload: deload,
-        finish: d === total, note: notes.join(", ")
+        mins: mins, wake: mins ? wakeFor(mins) : 0, dinner: mins ? dinnerFor(mins) : 0, rest: rest, deload: deload,
+        finish: d === total
       });
     }
     return days;
@@ -420,31 +440,59 @@ $(function () {
     $.each(chunk, function (_, x) { if (x.mins > 0) { mn = Math.min(mn, x.mins); mx = Math.max(mx, x.mins); } });
     var label = a.date.toLocaleDateString("en-GB", {month: "short", year: "numeric"});
     var cyc = mx ? (mn === mx ? mx + " min" : mn + " se " + mx + " min") : "-";
-    return '<button type="button" class="mhead" aria-expanded="false" data-m="' + m + '">' +
-      '<span>Mahina ' + (m + 1) + ' (' + label + ')<br><span class="ms">' + oneDec(a.w) + ' &rarr; ' + oneDec(b.w) + ' kg, ' + a.kcal + ' kcal, cycle ' + cyc + '</span></span>' +
+    if (mx && state.p.sessions === 2) cyc += " x 2";
+    return '<button type="button" class="mhead" aria-expanded="' + (m === 0) + '" data-m="' + m + '">' +
+      '<span>Month ' + (m + 1) + ' (' + label + ')<br><span class="ms">' + oneDec(a.w) + ' &rarr; ' + oneDec(b.w) + ' kg, ' + a.kcal + ' kcal, cycle ' + cyc + '</span></span>' +
       '<span class="arrow" aria-hidden="true">&#9656;</span></button>';
   }
 
   function monthRows(chunk) {
-    var h = '<div class="table-wrap"><table><thead><tr><th>Din</th><th>Taareekh</th><th>Weight (andaza)</th><th>Calories</th><th>Protein</th><th>Cycle</th><th>Note</th></tr></thead><tbody>';
-    $.each(chunk, function (_, x) {
-      var cls = x.finish ? "finish" : (x.sunday ? "rest" : (x.deload ? "deload" : ""));
-      var cyc = x.mins ? x.mins + " min (Level " + x.level + ")" : "Aaram";
+    var h = '<div class="table-wrap"><table><thead><tr><th>Day</th><th>Date</th><th>Weight</th><th>Calories</th><th>Protein</th><th>Cycle</th>' + (hasMorning(state.p) ? '<th>Wakeup</th>' : '') + (hasNight(state.p) ? '<th>Dinner</th>' : '') + '<th>Burn</th></tr></thead><tbody>';
+    var morning = hasMorning(state.p), night = hasNight(state.p);
+    $.each($.grep(chunk, function (x) { return !x.rest || x.finish; }), function (_, x) {
+      var cls = x.finish ? "finish" : (x.deload ? "deload" : "");
+      var cyc = "Aaram", burn = "-";
+      if (x.mins) {
+        var lbl = state.p.sessions === 2 ? (x.mins * 2) + " min" : x.mins + " min " + (state.p.sessTime === "morning" ? "Morning" : "Night");
+        cyc = lbl;
+        burn = "~" + round10(x.burn) + " kcal";
+      }
       h += '<tr class="' + cls + '"><td class="num">' + x.d + '</td><td>' + fmtDate(x.date) + '</td><td class="num">' + oneDec(x.w) + ' kg</td>' +
-           '<td class="num">' + x.kcal + '</td><td class="num">' + x.protein + ' g</td><td>' + cyc + '</td><td>' + x.note + '</td></tr>';
+           '<td class="num">' + x.kcal + '</td><td class="num">' + x.protein + ' g</td><td>' + cyc + '</td>' + (morning ? '<td class="num">' + (x.mins ? fmtClock(x.wake) : "-") + '</td>' : '') + (night ? '<td class="num">' + (x.mins ? fmtClock(x.dinner) : "-") + '</td>' : '') + '<td class="num">' + burn + '</td></tr>';
     });
     return h + '</tbody></table></div>';
   }
 
+  function progressionHtml(p, sim) {
+    var rows = "";
+    for (var si = 0; ; si++) {
+      var wi = si * CYC.every;
+      if (wi >= sim.weeks) break;
+      var m = baseMins(wi), isMax = (m === CYC.max);
+      var from = wi + 1, to = Math.min(sim.weeks, wi + CYC.every);
+      var wk = isMax ? from + " se target tak" : (from === to ? "" + from : from + " se " + to);
+      var wt = sim.points[Math.min(wi, sim.points.length - 1)].w;
+      rows += '<tr><td>' + wk + '</td><td class="num">' + m + ' min</td>' + (hasMorning(p) ? '<td class="num">' + fmtClock(wakeFor(m)) + '</td>' : '') + (hasNight(p) ? '<td class="num">' + fmtClock(dinnerFor(m)) + '</td>' : '') + '<td class="num">~' +
+              round10(sessionKcal(wt, m) * p.sessions) + ' kcal</td></tr>';
+      if (isMax) break;
+    }
+    return '<div class="panel section"><h2>Cycle Time</h2>' +
+      '<div class="table-wrap"><table><thead><tr><th>Weeks</th><th>Session</th>' + (hasMorning(p) ? '<th>Wakeup</th>' : '') + (hasNight(p) ? '<th>Dinner</th>' : '') + '<th>Burn</th></tr></thead><tbody>' +
+      rows + '</tbody></table></div>' +
+      '<div class="hint" style="margin-top:10px">Har ' + CYC.every + ' weeks mein +' + CYC.step + ' minute. Har 4th hafta recovery week (time taqriban 30% kam). ' + daysShort(p) +
+      (hasMorning(p) ? 'Morning cycle hamesha ' + fmtClock(CYC.wake + CYC.gap + CYC.start) + ' par khatam hota hai, isliye har +' + CYC.step + ' min par ' + CYC.step + ' minute pehle uthein. ' : '') +
+      (hasNight(p) ? 'Night cycle ' + fmtClock(CYC.nightStart) + ' se shuru hota hai aur dinner cycle khatam hone ke ' + CYC.dinnerGap + ' minute baad, isliye har +' + CYC.step + ' min par dinner ' + CYC.step + ' minute der se hota hai. ' : '') +
+      'Burn net hai (MET ' + CYC.met + ' minus aaram ki 1 MET) aur us waqt ke weight par hai, weight kam hone par burn bhi thora kam hota hai.</div></div>';
+  }
+
   function dailyPanelHtml(p, sim, days) {
-    var cfg = cycleCfg(p.deficit);
-    var paceName = p.deficit <= 400 ? "Slow" : (p.deficit >= 800 ? "Fast" : "Normal");
-    var weeksToMax = Math.floor((cfg.max - cfg.start) / cfg.step) * cfg.every;
-    var html = '<div class="panel section"><h2>Roz ka plan (din ba din)</h2>' +
-      '<div class="cyc-note"><b>' + paceName + ' raftaar ke hisab se cycle:</b> ' + cfg.start + ' minute se shuru, har ' + cfg.every +
-      ' hafte mein +' + cfg.step + ' minute, ' + (weeksToMax + 1) + ' hafte ke baad zyada se zyada ' + cfg.max + ' minute. ' +
-      'Resistance har 6 hafte mein ek level barhayen (Level 1 se 6). Har 4th hafta <b>recovery week</b>: time taqriban 30% kam, resistance 1 level kam. ' +
-      'Itwar ko cycle se aaram aur subah weight check. Agar ek saath itna time mushkil ho to 2 session mein baant lein.</div>' +
+    var weeksToMax = Math.floor((CYC.max - CYC.start) / CYC.step) * CYC.every;
+    var html = '<div class="panel section"><h2>Daily Plan</h2>' +
+      '<div class="cyc-note"><b>Cycle plan:</b> har session ' + CYC.start + ' minute se shuru, har ' + CYC.every +
+      ' weeks mein +' + CYC.step + ' minute, ' + (weeksToMax + 1) + ' weeks ke baad zyada se zyada ' + CYC.max + ' minute. ' +
+      'Resistance har 6 weeks mein ek level barhayen (Level 1 se 6). Har 4th hafta <b>recovery week</b>: time taqriban 30% kam, resistance 1 level kam. ' +
+      daysLong(p) + ' Itwar subah weight check.' +
+      (p.sessions === 1 ? ' Agar ek saath itna time mushkil ho to 2 session mein baant lein.' : '') + '</div>' +
       '<div class="hint" style="margin:0 0 12px">Calories aur protein har phase ke hisab se hain. Khane ki list upar Meal plan mein dekhein. Weight ka andaza hai, asal mein thora upar neeche hoga.</div>';
     var m = 0;
     for (var i = 0; i < days.length; i += 30, m++) {
@@ -455,7 +503,6 @@ $(function () {
     return html + '</div>';
   }
 
-  /* ---------- Rendering ---------- */
   function showError(msg) { $("#error").text(msg).show(); }
   function clearError() { $("#error").hide().text(""); }
 
@@ -496,6 +543,38 @@ $(function () {
     return svg;
   }
 
+  function phaseMins(idx) {
+    var wk = 0, k;
+    for (k = 0; k < idx; k++) wk += state.sim.bands[k].weeks;
+    var last = wk + Math.max(state.sim.bands[idx].weeks - 1, 0);
+    return {a: baseMins(wk), z: baseMins(last)};
+  }
+
+  function mealRows(tier, idx) {
+    var M = MEALS[tier], p = state.p, rows = [];
+    var morning = hasMorning(p);
+    var night = hasNight(p);
+    var pm = phaseMins(idx), same = pm.a === pm.z;
+    var cm = (same ? pm.a + " minute" : pm.a + " se " + pm.z + " minute (har " + CYC.every + " weeks mein +" + CYC.step + " min)") + ", resistance " + M.res + ".";
+    var wakeA = wakeFor(pm.a), wakeZ = wakeFor(pm.z), endAt = fmtClock(CYC.wake + CYC.gap + CYC.start);
+    if (morning) {
+      var snack = "1 glass paani, chahein to 2 khajoor ya aadha kela";
+      rows.push({t: fmtClock(wakeA + CYC.gap), n: "Morning cycle", cycle: true,
+        i: same
+          ? "Wakeup " + fmtClock(wakeA) + ". " + snack + ". Phir " + cm + " Cycle " + endAt + " par khatam, uske baad foran nashta."
+          : "Is phase ke shuru mein uthna " + fmtClock(wakeA) + ". " + snack + ". Phir " + cm + " Har +" + CYC.step + " min par " + CYC.step + " minute pehle uthein, phase ke end tak uthna " + fmtClock(wakeZ) + ". Cycle " + endAt + " par khatam, uske baad foran nashta."});
+    }
+    rows.push({t: morning ? endAt : "11:15 am", n: "Nashta", i: M.nashta});
+    rows.push({t: "4:00 pm", n: "Lunch", i: M.lunch});
+    if (night) rows.push({t: "9:45 pm", n: "Night cycle", cycle: true, i: cm + " Cycle ke baad halka dinner."});
+    var dinA = fmtClock(dinnerFor(pm.a)), dinZ = fmtClock(dinnerFor(pm.z)), dinNote = "";
+    if (night) dinNote = same
+      ? "Cycle khatam hone ke " + CYC.dinnerGap + " minute baad. "
+      : "Is phase ke shuru mein " + dinA + ", har +" + CYC.step + " min par " + CYC.step + " minute der se, phase ke end tak " + dinZ + ". ";
+    rows.push({t: night ? dinA : "10:30 pm", n: "Dinner (halka)", i: dinNote + M.dinner});
+    return rows;
+  }
+
   function mealsHtml(idx) {
     var b = state.sim.bands[idx], tier = tierFor(b.kcal), mac = macrosFor(b.kcal, state.p.tgt);
     var html = '<div class="macros">' +
@@ -503,10 +582,53 @@ $(function () {
       '<div class="macro">Protein <b>' + mac.protein + '</b> g</div>' +
       '<div class="macro">Carbs <b>' + mac.carbs + '</b> g</div>' +
       '<div class="macro">Fat <b>' + mac.fat + '</b> g</div></div>';
-    $.each(MEALS[tier], function (_, m) {
+    $.each(mealRows(tier, idx), function (_, m) {
       html += '<div class="meal' + (m.cycle ? ' cycle' : '') + '"><div class="t">' + m.t + '</div>' +
               '<div><div class="nm">' + m.n + '</div><div class="it">' + m.i + '</div></div></div>';
     });
+    return html;
+  }
+
+  function idealWeights(hCm, sex) {
+    var inch = hCm / 2.54 - 60, m = sex === "male";
+    return [
+      {n: "Devine", w: (m ? 50 : 45.5) + 2.3 * inch},
+      {n: "Robinson", w: (m ? 52 : 49) + (m ? 1.9 : 1.7) * inch},
+      {n: "Miller", w: (m ? 56.2 : 53.1) + (m ? 1.41 : 1.36) * inch},
+      {n: "Hamwi", w: (m ? 48 : 45.5) + (m ? 2.7 : 2.2) * inch}
+    ];
+  }
+
+  function recommendedHtml(p) {
+    var h2 = Math.pow(p.h / 100, 2), lo = 18.5 * h2, hi = 24.9 * h2, asianHi = 22.9 * h2;
+    var list = idealWeights(p.h, p.sex), sum = 0, i;
+    for (i = 0; i < list.length; i++) sum += list[i].w;
+    var rec = Math.min(hi, Math.max(lo, sum / list.length));
+    var gap = Math.round((p.cur - rec) * 10) / 10;
+    var gapText = Math.abs(gap) < 0.5 ? "Barabar" : (gap > 0 ? "+" : "") + oneDec(gap) + " <small>kg</small>";
+    var html = '<div class="panel section"><h2>Recommended Weight</h2><div class="stats">' +
+      '<div class="stat"><div class="k">Recommended</div><div class="v">' + oneDec(rec) + ' <small>kg</small></div><div class="n">' + (p.sex === "male" ? "Male" : "Female") + ', ' + p.h + ' cm, 4 formulas ka ausat</div></div>' +
+      '<div class="stat"><div class="k">Healthy range</div><div class="v">' + Math.round(lo) + ' se ' + Math.round(hi) + ' <small>kg</small></div><div class="n">BMI 18.5 se 24.9</div></div>' +
+      '<div class="stat"><div class="k">South Asian range</div><div class="v">' + Math.round(lo) + ' se ' + Math.round(asianHi) + ' <small>kg</small></div><div class="n">BMI 18.5 se 22.9</div></div>' +
+      '<div class="stat"><div class="k">Current vs Recommended</div><div class="v">' + gapText + '</div><div class="n">Abhi ' + p.cur + ' kg</div></div>' +
+      '</div>';
+    html += '<div class="table-wrap"><table><thead><tr><th>Formula</th><th>Weight</th></tr></thead><tbody>';
+    for (i = 0; i < list.length; i++) html += '<tr><td>' + list[i].n + '</td><td class="num">' + oneDec(list[i].w) + ' kg</td></tr>';
+    html += '</tbody></table></div>';
+    if (p.tgt < Math.round(lo)) {
+      html += '<div class="notice" style="margin-top:14px">Aapka target (' + p.tgt + ' kg) healthy range (' + Math.round(lo) + ' se ' + Math.round(hi) + ' kg) se neeche hai. Target dobara soch lein.</div>';
+    } else if (p.tgt > Math.round(hi)) {
+      html += '<div class="notice" style="margin-top:14px">Aapka target (' + p.tgt + ' kg) healthy range (' + Math.round(lo) + ' se ' + Math.round(hi) + ' kg) se upar hai.</div>';
+    } else {
+      html += '<div class="cyc-note" style="margin-top:14px">Aapka target (' + p.tgt + ' kg) healthy range ke andar hai' + (p.tgt > Math.round(asianHi) ? ', lekin South Asian range se thora upar hai.' : '.') + '</div>';
+    }
+    html += '<ul class="rules" style="margin-top:12px">';
+    html += '<li>Ye formulas age nahi dekhte, aur 18 se 64 saal ke adult ke liye hain.</li>';
+    if (p.age < 18) html += '<li>Aapki age 18 se kam hai, is liye ye range lagu nahi hoti. Bachon aur teenagers ke liye BMI-for-age chart chahiye, doctor se poochhein.</li>';
+    if (p.age >= 65) html += '<li>65 saal ke baad thora zyada weight bhi aksar theek maana jata hai, aur muscle bachana zyada zaroori hai. Doctor se mashwara karein.</li>';
+    html += '<li>South Asian logon mein kam BMI par bhi sugar aur dil ka khatra barh sakta hai, is liye unke liye range thori kam rakhi jati hai.</li>';
+    html += '<li>Muscle zyada ho ya frame bari ho to asal ideal weight thora zyada ho sakta hai. Ye sirf andaza hai, doctor ki salah ka badal nahi.</li>';
+    html += '</ul></div>';
     return html;
   }
 
@@ -532,52 +654,56 @@ $(function () {
     }
 
     html += '<div class="hero"><div class="small">' + p.cur + ' kg se ' + p.tgt + ' kg tak, taqriban</div>' +
-            '<div class="big"><span>' + (months < 1.5 ? Math.round(sim.weeks) : months) + '</span> ' + (months < 1.5 ? 'hafte' : 'mahine') + '</div>' +
-            '<div class="date">Start: ' + p.start.toLocaleDateString("en-GB", {day: "numeric", month: "short", year: "numeric"}) + '. Target taareekh: ' + dateStr + ' (agar plan par 80 se 90% chalein)</div></div>';
+            '<div class="big"><span>' + (months < 1.5 ? Math.round(sim.weeks) : months) + '</span> ' + (months < 1.5 ? 'weeks' : 'months') + '</div>' +
+            '<div class="date">Start: ' + p.start.toLocaleDateString("en-GB", {day: "numeric", month: "short", year: "numeric"}) + '. Target date: ' + dateStr + ' (agar plan par 80 se 90% chalein)</div></div>';
 
     html += '<div class="stats">' +
-      '<div class="stat"><div class="k">Abhi ka BMI</div><div class="v">' + bmiText(bmiNow) + '</div><div class="n">Healthy: 18.5 se 24.9</div></div>' +
+      '<div class="stat"><div class="k">Current BMI</div><div class="v">' + bmiText(bmiNow) + '</div><div class="n">Healthy: 18.5 se 24.9</div></div>' +
       '<div class="stat"><div class="k">Target BMI</div><div class="v">' + bmiText(bmiTgt) + '</div><div class="n">Healthy weight: ' + hMin + ' se ' + hMax + ' kg</div></div>' +
-      '<div class="stat"><div class="k">Maintenance</div><div class="v">' + first.tdee + ' <small>kcal</small></div><div class="n">Roz ki zaroorat abhi</div></div>' +
-      '<div class="stat"><div class="k">Roz ki calories</div><div class="v">' + first.kcal + ' <small>kcal</small></div><div class="n">Shuru ke liye</div></div>' +
+      '<div class="stat"><div class="k">Maintenance</div><div class="v">' + first.tdee + ' <small>kcal</small></div><div class="n">Cycle sameet roz ki zaroorat</div></div>' +
+      '<div class="stat"><div class="k">Cycle</div><div class="v">' + (p.sessions === 2 ? '2 x ' : '1 x ') + CYC.start + ' <small>min</small></div><div class="n">~' + round10(sessionKcal(p.cur, CYC.start) * p.sessions) + ' kcal burn, ' + (p.sessions === 2 ? 'morning + night' : (p.sessTime === 'morning' ? 'morning' : 'night')) + '</div></div>' +
+      '<div class="stat"><div class="k">Daily calories</div><div class="v">' + first.kcal + ' <small>kcal</small></div><div class="n">Shuru ke liye</div></div>' +
       '<div class="stat"><div class="k">Protein</div><div class="v">' + mac.protein + ' <small>g</small></div><div class="n">Roz, muscle bachane ke liye</div></div>' +
-      '<div class="stat"><div class="k">Kam karna hai</div><div class="v">' + toLose + ' <small>kg</small></div><div class="n">Taqriban ' + (Math.round(toLose / sim.weeks * 100) / 100) + ' kg/hafta ausat</div></div>' +
+      '<div class="stat"><div class="k">Reduce Target</div><div class="v">' + toLose + ' <small>kg</small></div><div class="n">Taqriban ' + (Math.round(toLose / sim.weeks * 100) / 100) + ' kg/hafta ausat</div></div>' +
+      '<div class="stat"><div class="k">Total weeks</div><div class="v">' + sim.weeks + ' <small>weeks</small></div><div class="n">Total ' + months + ' months</div></div>' +
       '</div>';
 
     html += '<div class="panel section"><h2>Weight ka safar</h2><div class="chart-box">' + buildChart(sim, p) + '</div></div>';
 
     html += '<div class="panel section"><h2>Phase wise plan</h2><div class="table-wrap"><table><thead><tr>' +
       '<th>Phase</th><th>Calories/din</th><th>Maintenance</th><th>Time</th></tr></thead><tbody>';
-    var cum = 0;
     $.each(sim.bands, function (_, b) {
-      cum += b.weeks;
       html += '<tr><td class="num">' + Math.round(b.from) + ' &rarr; ' + Math.round(b.to) + ' kg</td>' +
               '<td class="num">' + b.kcal + (b.floored ? ' (minimum)' : '') + '</td>' +
               '<td class="num">' + b.tdee + '</td>' +
-              '<td class="num">' + monthsText(b.weeks) + ' (kul ' + monthsText(cum) + ')</td></tr>';
+              '<td class="num">' + monthsText(b.weeks) + '</td></tr>';
     });
-    html += '</tbody></table></div><div class="hint" style="margin-top:10px">Har phase mein calories us waqt ke weight ke hisab se dobara set hoti hain, isliye har 10 kg ke baad thori kam hoti hain.</div></div>';
+    html += '</tbody></table></div><div class="hint" style="margin-top:10px">Har phase mein calories us waqt ke weight ke hisab se dobara set hoti hain, isliye har 10 kg ke baad thori kam hoti hain. Ye calories shuru ke ' + CYC.start + ' minute wale cycle level par set hain. Time barhne ka extra burn bonus hai, isliye weight thora tez girta hai.</div></div>';
 
     html += '<div class="panel section"><h2>Meal plan</h2><div class="tabs" role="tablist">';
     $.each(sim.bands, function (i, b) {
       html += '<button type="button" class="tab' + (i === 0 ? ' active' : '') + '" role="tab" data-idx="' + i + '">' + Math.round(b.from) + ' &rarr; ' + Math.round(b.to) + ' kg</button>';
     });
     html += '</div><div id="meals">' + mealsHtml(0) + '</div>' +
-            '<div class="hint" style="margin-top:10px">Timing aapke routine (uthna 11 am, lunch 4 pm, dinner 10:30 pm) ke hisab se hai. Din mein bhook na lagne ki wajah se sirf 3 meals rakhe hain, lunch sab se bara aur dinner halka. Agar kisi din 4 baje se pehle kamzori ya chakkar lage to ek fruit ya dahi le lein.</div></div>';
+            '<div class="hint" style="margin-top:10px">Timing aapke routine (shuru mein uthna 10:45 am, office ke liye nikalna 11:30 am, lunch 4 pm, dinner 10:30 pm) ke hisab se hai. Din mein bhook na lagne ki wajah se sirf 3 meals rakhe hain, lunch sab se bara aur dinner halka. Agar kisi din 4 baje se pehle kamzori ya chakkar lage to ek fruit ya dahi le lein.' +
+            ((state.p.sessions === 2 || state.p.sessTime === 'morning') ? ' Morning cycle hamesha ' + fmtClock(CYC.wake + CYC.gap + CYC.start) + ' par khatam hota hai, isliye cycle time barhne par uthne ka time ' + CYC.step + ' minute pehle hota jata hai (' + fmtClock(wakeFor(30)) + ', ' + fmtClock(wakeFor(35)) + ', ' + fmtClock(wakeFor(40)) + ' ...). Daily Plan table ka Wakeup column dekhein.' : '') +
+            (hasNight(state.p) ? ' Night cycle ' + fmtClock(CYC.nightStart) + ' se shuru hota hai aur dinner cycle khatam hone ke ' + CYC.dinnerGap + ' minute baad, isliye time barhne par dinner ' + CYC.step + ' minute der se hota jata hai (' + fmtClock(dinnerFor(30)) + ', ' + fmtClock(dinnerFor(35)) + ', ' + fmtClock(dinnerFor(40)) + ' ...). Daily Plan table ka Dinner column dekhein.' : '') + (state.p.days.length < 7 ? ' Ye timing cycle wale dinon ki hai, aaram ke dinon mein cycle nahi hota.' : '') + '</div></div>';
 
     state.days = buildDays(p, sim);
+    html += progressionHtml(p, sim);
     html += dailyPanelHtml(p, sim, state.days);
 
     html += '<div class="panel section"><h2>Zaroori usool</h2><ul class="rules">';
     $.each(RULES, function (_, r) { html += '<li>' + r + '</li>'; });
     html += '</ul></div>';
 
+    html += recommendedHtml(p);
+
     html += '<p class="disclaimer">Ye andaza Mifflin-St Jeor formula aur 7,700 kcal = 1 kg fat par based hai. Asal nateeja har insan mein thora alag hota hai. Ye doctor ya dietitian ki salah ka badal nahi hai. Koi medical masla ho to pehle un se mashwara karein.</p>';
 
     $("#results").html(html);
   }
 
-  /* ---------- Events ---------- */
   function heightCm() {
     var ft = parseFloat($("#ft").val()) || 0, inch = parseFloat($("#inch").val()) || 0;
     return Math.round((ft * 12 + inch) * 2.54);
@@ -590,16 +716,15 @@ $(function () {
 
   $("#ft, #inch").on("input", function () { $("#cm-hint").text(heightCm() + " cm"); });
 
-  /* ---------- Saved inputs (PWA: form dobara bharna na pade) ---------- */
-  var STORE_KEY = "dietplan.inputs.v1";
-  var FIELDS = ["gender", "age", "ft", "inch", "cur", "tgt", "act", "pace", "start"];
+  var STORE_KEY = "dietplan.inputs.v2";
+  var FIELDS = ["gender", "age", "ft", "inch", "cur", "tgt", "act", "sessTime", "pace", "start"];
 
   function saveInputs() {
     try {
       var o = {};
       $.each(FIELDS, function (_, id) { o[id] = $("#" + id).val(); });
       localStorage.setItem(STORE_KEY, JSON.stringify(o));
-    } catch (e) { /* private mode ya storage band: ignore */ }
+    } catch (e) { }
   }
 
   function loadInputs() {
@@ -610,10 +735,14 @@ $(function () {
         if (o[id] !== undefined && o[id] !== null && o[id] !== "") $("#" + id).val(o[id]);
       });
       $("#cm-hint").text(heightCm() + " cm");
-    } catch (e) { /* kharab data: defaults rehne dein */ }
+    } catch (e) { }
   }
 
   loadInputs();
+
+  function syncSess() { $("#sessWrap").toggle($("#act").val() === "1"); }
+  syncSess();
+  $("#act").on("change", syncSess);
 
   function generate() {
     clearError();
@@ -623,8 +752,10 @@ $(function () {
       h: heightCm(),
       cur: parseFloat($("#cur").val()),
       tgt: parseFloat($("#tgt").val()),
-      act: parseFloat($("#act").val()),
+      sessions: parseInt($("#act").val(), 10) === 1 ? 1 : 2,
+      sessTime: $("#sessTime").val() === "night" ? "night" : "morning",
       deficit: parseFloat($("#pace").val()),
+      days: DAYS[$("#pace").val()] || DAYS["600"],
       start: null
     };
     var sv = $("#start").val();
@@ -653,8 +784,9 @@ $(function () {
   $("#results").on("click", ".mhead", function () {
     var $m = $(this).closest(".month"), $body = $m.find(".mbody"), idx = parseInt($(this).data("m"), 10);
     if (!$body.children().length) { $body.html(monthRows(state.days.slice(idx * 30, idx * 30 + 30))); }
-    var open = $m.toggleClass("open").hasClass("open");
-    $(this).attr("aria-expanded", open);
+    var wasOpen = $m.hasClass("open");
+    $("#results .month.open").removeClass("open").find(".mhead").attr("aria-expanded", false);
+    if (!wasOpen) { $m.addClass("open"); $(this).attr("aria-expanded", true); }
   });
 
   $("#results").on("click", ".tab", function () {
